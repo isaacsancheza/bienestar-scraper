@@ -74,7 +74,7 @@ def get_entries() -> list[dict[str, Any]]:
             driver.quit()
         except:
             pass
-    return sorted(entries, key=lambda d: d['timestamp'], reverse=True)
+    return sorted(entries, key=lambda d: d['timestamp'])
 
 
 if __name__ == '__main__':
