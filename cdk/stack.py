@@ -73,7 +73,7 @@ class Stack(cdk.Stack):
                     'PARAMETER_NAME': parameter.parameter_name,
                 },
             ),
-            schedule=appscaling.Schedule.cron(hour='6', minute='0', week_day='1'),
+            schedule=appscaling.Schedule.cron(hour='10', minute='0'),
             subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
         )
 
