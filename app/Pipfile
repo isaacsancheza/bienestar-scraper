@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 selenium = "*"
 python-dateutil = "*"
-requests = "*"
 boto3 = "*"
 
 [dev-packages]
@@ -14,7 +13,7 @@ mypy = "*"
 pytest = "*"
 autopep8 = "*"
 coverage = "*"
-boto3-stubs = {extras = ["s3", "ssm"], version = "*"}
+boto3-stubs = {extras = ["s3", "ssm", "sesv2"], version = "*"}
 aws-cdk-lib = "*"
 
 [requires]

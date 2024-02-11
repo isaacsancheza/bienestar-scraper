@@ -16,8 +16,9 @@ class Stack(cdk.Stack):
             *,
             region: str,
             account: str,
-            parameter_name: str,
             image_repository: str,
+            sender_address_parameter_name: str,
+            recipients_addresses_parameter_name: str,
             **kwargs
         ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -38,10 +39,16 @@ class Stack(cdk.Stack):
             time_to_live_attribute='ttl',
         )
 
-        parameter = ssm.StringParameter.from_secure_string_parameter_attributes(
+        sender_address_parameter = ssm.StringParameter.from_secure_string_parameter_attributes(
             self,
-            'Parameter',
-            parameter_name=parameter_name,
+            'SenderAddressParameter',
+            parameter_name=sender_address_parameter_name,
+        )
+
+        recipients_addresses_parameter = ssm.StringParameter.from_secure_string_parameter_attributes(
+            self,
+            'RecipientsAddressesParameter',
+            parameter_name=recipients_addresses_parameter_name,
         )
 
         image = ecs.EcrImage.from_registry(image_repository)
@@ -70,7 +77,8 @@ class Stack(cdk.Stack):
                 memory_limit_mib=2048, 
                 environment={
                     'TABLE_NAME': table.table_name,
-                    'PARAMETER_NAME': parameter.parameter_name,
+                    'SENDER_ADDRESS_PARAMETER_NAME': sender_address_parameter.parameter_name,
+                    'RECIPIENTS_ADDRESSES_PARAMETER_NAME': recipients_addresses_parameter.parameter_name,
                 },
             ),
             schedule=appscaling.Schedule.cron(hour='10', minute='0'),
@@ -78,7 +86,8 @@ class Stack(cdk.Stack):
         )
 
         table.grant_read_write_data(scheduled_fargate_task.task_definition.task_role)
-        parameter.grant_read(scheduled_fargate_task.task_definition.task_role)
+        sender_address_parameter.grant_read(scheduled_fargate_task.task_definition.task_role)
+        recipients_addresses_parameter.grant_read(scheduled_fargate_task.task_definition.task_role)
 
         cdk.CfnOutput(
             self,

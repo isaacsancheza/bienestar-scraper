@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
 from os import environ
-from time import sleep
 from typing import cast
 
-import requests
 from boto3 import client, resource
 from boto3.dynamodb.conditions import Attr
 
 from scraper import get_entries
 
-
-TEMPLATE = """:newspaper: {title}
-:calendar: {date}
-:link: {link}
+template = """📰 {title}
+📆 {date}
+🔗 {link}
 """
-
-TABLE_NAME = environ['TABLE_NAME']
-PARAMETER_NAME = environ['PARAMETER_NAME']
+table_name = environ['TABLE_NAME']
+sender_address_parameter_name = environ['SENDER_ADDRESS_PARAMETER_NAME']
+recipients_addresses_parameter_name = environ['RECIPIENTS_ADDRESSES_PARAMETER_NAME']
 
 ssm = client('ssm')
+ses = client('sesv2')
 dynamodb = client('dynamodb')
 
-table = resource('dynamodb').Table(TABLE_NAME)
-endpoint = cast(dict, ssm.get_parameter(Name=PARAMETER_NAME, WithDecryption=True))['Parameter']['Value']
-
+table = resource('dynamodb').Table(table_name)
+sender_address = cast(dict, ssm.get_parameter(Name=sender_address_parameter_name, WithDecryption=True))['Parameter']['Value']
+recipients_addresses = cast(dict, ssm.get_parameter(Name=recipients_addresses_parameter_name, WithDecryption=True))['Parameter']['Value']
 
 for entry in get_entries():
     try:
@@ -33,10 +31,24 @@ for entry in get_entries():
         )
     except dynamodb.exceptions.ConditionalCheckFailedException:
         continue
-    data = {
-        'Content': TEMPLATE.format(**entry),
-    }
-    response = requests.post(endpoint, json=data)
-    if not response.ok:
-        response.raise_for_status()
-    sleep(1.5)
+    
+    ses.send_email(
+        FromEmailAddress=sender_address,
+        Destination={
+            'ToAddresses': recipients_addresses.split(', '),
+        },
+        Content={
+            'Simple': {
+                'Subject': {
+                    'Data': 'Nuevo anuncio de bienestar',
+                    'Charset': 'utf-8',
+                },
+                'Body': {
+                    'Text': {
+                        'Data': template.format(**entry),
+                        'Charset': 'utf-8',
+                    },
+                },   
+            },
+        },
+    )
