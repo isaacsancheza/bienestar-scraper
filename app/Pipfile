@@ -7,6 +7,7 @@ name = "pypi"
 selenium = "*"
 python-dateutil = "*"
 boto3 = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 mypy = "*"

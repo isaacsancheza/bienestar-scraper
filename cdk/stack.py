@@ -17,6 +17,7 @@ class Stack(cdk.Stack):
             region: str,
             account: str,
             image_repository: str,
+            sentry_dsn: str,
             sender_address_parameter_name: str,
             recipients_addresses_parameter_name: str,
             **kwargs
@@ -76,6 +77,7 @@ class Stack(cdk.Stack):
                 image=image, 
                 memory_limit_mib=2048, 
                 environment={
+                    'SENTRY_DSN': sentry_dsn,
                     'TABLE_NAME': table.table_name,
                     'SENDER_ADDRESS_PARAMETER_NAME': sender_address_parameter.parameter_name,
                     'RECIPIENTS_ADDRESSES_PARAMETER_NAME': recipients_addresses_parameter.parameter_name,

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sentry_sdk
+
 from os import environ
 from typing import cast
 
@@ -6,6 +8,12 @@ from boto3 import client, resource
 from boto3.dynamodb.conditions import Attr
 
 from scraper import get_entries
+
+sentry_sdk.init(
+    dsn=environ['SENTRY_DSN'],
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 template = """📰 {title}
 📆 {date}
