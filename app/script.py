@@ -1,35 +1,31 @@
 #!/usr/bin/env python3
 import sentry_sdk
-
-from os import environ
-from typing import cast
-
 from boto3 import client, resource
 from boto3.dynamodb.conditions import Attr
+from aws_lambda_powertools.utilities.parameters import get_parameters
 
 from scraper import get_entries
 
+parameters = get_parameters('/bienestar-scraper')
+
+table_name = parameters['table-name']
+sentry_dsn = parameters['sentry-dsn']
+sender_address = parameters['sender-address']
+sender_display_name = parameters['sender-display-name']
+recipients_addresses = parameters['recipients-addresses'].split(',')
+
 sentry_sdk.init(
-    dsn=environ['SENTRY_DSN'],
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
+    dsn=sentry_dsn,
 )
 
 template = """📰 {title}
 📆 {date}
 🔗 {link}
 """
-table_name = environ['TABLE_NAME']
-sender_address_parameter_name = environ['SENDER_ADDRESS_PARAMETER_NAME']
-recipients_addresses_parameter_name = environ['RECIPIENTS_ADDRESSES_PARAMETER_NAME']
 
-ssm = client('ssm')
 ses = client('sesv2')
-dynamodb = client('dynamodb')
-
 table = resource('dynamodb').Table(table_name)
-sender_address = cast(dict, ssm.get_parameter(Name=sender_address_parameter_name, WithDecryption=True))['Parameter']['Value']
-recipients_addresses = cast(dict, ssm.get_parameter(Name=recipients_addresses_parameter_name, WithDecryption=True))['Parameter']['Value']
+dynamodb = client('dynamodb')
 
 for entry in get_entries():
     try:
@@ -41,14 +37,14 @@ for entry in get_entries():
         continue
     
     ses.send_email(
-        FromEmailAddress=sender_address,
+        FromEmailAddress=f'{sender_display_name} <{sender_address}>',
         Destination={
-            'ToAddresses': recipients_addresses.split(', '),
+            'ToAddresses': recipients_addresses,
         },
         Content={
             'Simple': {
                 'Subject': {
-                    'Data': 'Nuevo anuncio de bienestar',
+                    'Data': 'Nuevo anuncio',
                     'Charset': 'utf-8',
                 },
                 'Body': {

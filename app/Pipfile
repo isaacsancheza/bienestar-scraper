@@ -4,10 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-selenium = "*"
-python-dateutil = "*"
 boto3 = "*"
+selenium = "*"
 sentry-sdk = "*"
+python-dateutil = "*"
+aws-lambda-powertools = "*"
 
 [dev-packages]
 mypy = "*"
