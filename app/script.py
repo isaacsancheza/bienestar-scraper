@@ -44,7 +44,7 @@ for entry in get_entries():
         Content={
             'Simple': {
                 'Subject': {
-                    'Data': 'Nuevo anuncio',
+                    'Data': entry['title'],
                     'Charset': 'utf-8',
                 },
                 'Body': {
